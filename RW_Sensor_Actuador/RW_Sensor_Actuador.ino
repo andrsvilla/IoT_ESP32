@@ -1,3 +1,12 @@
+/* este código se encarga de tomar una distancia cada un segundo
+ *  y de acuerdo a la distancia deseada, si la distancia es menor,
+ *  entonces se enciende un led indicando que hay un objeto cerca,
+ *  de lo contrario se apaga el led. la distancia deseada se puede
+ *  cambiar a través de la app ingresando al servicio UUI que genera
+ *  la ESP32,. EN la app también se puede obtener la distancia que 
+ *  lee el sensor y la distancia deseada.
+ */
+
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -30,6 +39,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
       Serial.print("New value: ");
       Serial.println(valStr);
       DistDeseada = valStr;
+      ActuatorCharacteristic->setValue(DistDeseada.c_str());
       delay(600);
       digitalWrite(LedEnPin, LOW);
     }
@@ -99,15 +109,17 @@ void loop() {
   Duracion = pulseIn(EchoPin, HIGH);
   DistCm = Duracion * SoundSpeed/2;
   Dato = String(DistCm, 2) + " cm";
+  
   SensorCharacteristic->setValue((uint8_t*)&Dato, 10);
-  if (DistCm >= DistDeseada.toInt()) {
+  delay(100);
+  
+  if (DistCm > DistDeseada.toInt()) {
     digitalWrite(LedOutPin, LOW); // LED Off
     ledStatus = 48;
   }
-  else if (DistCm < DistDeseada.toInt()) {
+  else if (DistCm <= DistDeseada.toInt()) {
     ledStatus = 49;
     digitalWrite(LedOutPin, HIGH); // LED On
   }
-  ActuatorCharacteristic.setValue(DistDeseada.c_str());
   delay(900);
 }
